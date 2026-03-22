@@ -282,11 +282,12 @@ main {
   right: calc(50% - 200px + 16px);
   width: 52px; height: 52px; border-radius: 50%;
   background: var(--blue);
-  color: #fff; border: none; font-size: 26px;
+  color: #fff; border: none;
   display: flex; align-items: center; justify-content: center;
   box-shadow: var(--shadow-fab);
   cursor: pointer; z-index: 99;
   transition: transform .15s, box-shadow .15s;
+  text-decoration: none;
 }
 .fab:active { transform: scale(.92); box-shadow: 0 2px 8px rgba(0,122,255,.3); }
 @media (max-width: 430px) { .fab { right: 16px; } }
@@ -544,7 +545,12 @@ main {
           <input class="ios-input" id="cfgUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec"/>
         </div>
       </div>
-      <button class="btn-ios primary" onclick="salvarConfig()" style="margin-bottom:24px">Salvar URL</button>
+      <button class="btn-ios primary" onclick="salvarConfig()" style="margin-bottom:12px">Salvar URL</button>
+      <a href="https://docs.google.com/spreadsheets/d/1xIqN4l9hDx6mMifYNrDhiu15ReFichx49tj86VTMOsU/edit?gid=410905754#gid=410905754"
+         target="_blank"
+         style="display:block;margin:0 0 24px;padding:15px;background:rgba(52,199,89,.1);color:#1A9E3A;border-radius:12px;text-align:center;font-size:15px;font-weight:600;text-decoration:none;">
+        📊 Abrir planilha no Google Sheets
+      </a>
 
       <div class="section-label">Budget mensal</div>
       <div class="config-group">
@@ -588,59 +594,13 @@ main {
   </div>
 </div>
 
-<!-- FAB -->
-<button class="fab" onclick="abrirForm(null)" aria-label="Novo gasto">
-  <span style="font-size:24px;line-height:1;margin-top:1px">+</span>
-</button>
+<!-- FAB → abre Google Sheets -->
+<a class="fab" href="https://docs.google.com/spreadsheets/d/1xIqN4l9hDx6mMifYNrDhiu15ReFichx49tj86VTMOsU/edit?gid=410905754#gid=410905754" target="_blank" aria-label="Adicionar gasto no Sheets">
+  <span style="font-size:22px;line-height:1">📝</span>
+</a>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
-
-<!-- SHEET: Novo/Editar -->
-<div class="overlay" id="overlayForm" onclick="fecharForm(event)">
-  <div class="sheet" onclick="event.stopPropagation()">
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <div class="sheet-title" id="sheetTitle">Novo gasto</div>
-      <button class="sheet-close" onclick="fecharForm()">✕</button>
-    </div>
-
-    <div class="form-section">
-      <div class="form-label-top">Título</div>
-      <input class="ios-input" id="fTitulo" type="text" placeholder="Ex: Mercado, Cinema…" autocomplete="off"/>
-    </div>
-
-    <div class="form-section">
-      <div class="form-label-top">Valor (R$)</div>
-      <input class="ios-input" id="fValor" type="number" inputmode="decimal" placeholder="0,00" step="0.01" min="0"/>
-    </div>
-
-    <div class="form-section">
-      <div class="form-label-top">Categoria</div>
-      <div class="seg-ctrl">
-        <button class="seg-opt active-al" id="sAl" onclick="setCategoria('al')">🍽️ Alimentação</button>
-        <button class="seg-opt" id="sEn" onclick="setCategoria('en')">🎭 Entretenimento</button>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-label-top">Forma de pagamento</div>
-      <div class="seg-ctrl">
-        <button class="seg-opt active" id="sDeb" onclick="setPag('deb')">Débito / Pix</button>
-        <button class="seg-opt" id="sCred" onclick="setPag('cred')">Crédito</button>
-      </div>
-    </div>
-
-    <div class="form-section" style="border-bottom:none">
-      <div class="form-label-top">Data</div>
-      <input class="ios-input" id="fData" type="date"/>
-    </div>
-
-    <button class="btn-ios primary" id="btnSalvar" onclick="salvarGasto()">Salvar</button>
-    <button class="btn-ios danger" id="btnExcluir" style="display:none" onclick="excluirGasto()">Excluir despesa</button>
-    <div style="height:8px"></div>
-  </div>
-</div>
 
 <script>
 // ══════════════════════════════════════════════
@@ -896,14 +856,14 @@ function renderLista(lista) {
   if (!lista.length) {
     el.innerHTML = `<div class="empty-card">
       <div class="empty-icon">🧾</div>
-      <div class="empty-text">Nenhuma despesa nesta semana.<br>Toque em + para adicionar.</div>
+      <div class="empty-text">Nenhuma despesa nesta semana.<br>Toque em 📝 para adicionar no Sheets.</div>
     </div>`;
     return;
   }
   const ord = [...lista].sort((a,b) => ordemDesc ? b.ts - a.ts : a.ts - b.ts);
   el.innerHTML = `<div class="expense-group">${ord.map(g => {
     const d = new Date(g.ts);
-    return `<div class="expense-row" onclick="abrirForm('${g.id}')">
+    return `<div class="expense-row">
       <div class="expense-icon-wrap ${g.cat}">${g.cat==='al'?'🍽️':'🎭'}</div>
       <div class="expense-body">
         <div class="expense-title">${g.titulo}</div>
@@ -913,7 +873,6 @@ function renderLista(lista) {
         <div class="expense-value">${fmtBRL(g.valor)}</div>
         <div class="expense-pay">${g.pag==='deb'?'Déb/Pix':'Crédito'}</div>
       </div>
-      <span class="expense-chevron">›</span>
     </div>`;
   }).join('')}</div>`;
 }
