@@ -655,12 +655,59 @@ const CFG = {
   set budgetEn(v){ localStorage.setItem('cfg_bEn', v); },
 };
 
+// Cache local — fonte de dados sempre vem do Sheets quando online
 let gastos     = JSON.parse(localStorage.getItem('gastos_v2') || '[]');
+let sincronizando = false;
+let ultimaSinc    = 0;
+
 let semOffset  = 0;
 let ordemDesc  = true;
 let editId     = null;
 let catAtual   = 'al';
 let pagAtual   = 'deb';
+
+// ══════════════════════════════════════════════
+// SYNC: BUSCAR DADOS DO SHEETS
+// ══════════════════════════════════════════════
+async function sincronizarDoSheets(forcar = false) {
+  if (!CFG.url) return;
+  // Evita chamadas repetidas em menos de 30s (exceto se forçado)
+  const agora = Date.now();
+  if (!forcar && agora - ultimaSinc < 30000) return;
+
+  sincronizando = true;
+  mostrarStatusSync('⟳ Sincronizando…');
+
+  try {
+    const res = await fetch(CFG.url + '?acao=listar', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.gastos)) {
+      gastos = data.gastos;
+      localStorage.setItem('gastos_v2', JSON.stringify(gastos));
+      ultimaSinc = Date.now();
+      mostrarStatusSync('');
+      renderTelaAtual();
+    }
+  } catch (e) {
+    mostrarStatusSync('⚠️ Offline — dados locais');
+    setTimeout(() => mostrarStatusSync(''), 3000);
+  } finally {
+    sincronizando = false;
+  }
+}
+
+function mostrarStatusSync(msg) {
+  const el = document.getElementById('headerSub');
+  if (msg) el.dataset.syncMsg = el.textContent;
+  el.textContent = msg || (el.dataset.syncMsg || '');
+}
+
+let telaAtual = 0;
+function renderTelaAtual() {
+  if (telaAtual === 0) renderSemana();
+  if (telaAtual === 1) renderMes();
+}
 
 // ══════════════════════════════════════════════
 // DATE UTILS
@@ -766,13 +813,14 @@ const TELAS = ['screenSemana','screenMes','screenConfig'];
 const TITULOS = ['Esta Semana','Este Mês','Configurações'];
 
 function irPara(idx) {
+  telaAtual = idx;
   TELAS.forEach((t,i) => {
     document.getElementById(t).classList.toggle('active', i === idx);
     document.getElementById(`tab${i}`).classList.toggle('active', i === idx);
   });
   document.getElementById('pageTitle').textContent = TITULOS[idx];
-  if (idx === 0) renderSemana();
-  if (idx === 1) renderMes();
+  if (idx === 0) { sincronizarDoSheets(); renderSemana(); }
+  if (idx === 1) { sincronizarDoSheets(); renderMes(); }
   if (idx === 2) renderConfig();
 }
 
@@ -1004,6 +1052,7 @@ function renderConfig() {
 function salvarConfig() {
   CFG.url = document.getElementById('cfgUrl').value.trim();
   toast('✅ URL salva!');
+  if (CFG.url) sincronizarDoSheets(true);
 }
 function salvarBudget() {
   CFG.budgetAl = parseFloat(document.getElementById('cfgBudgetAl').value)||1800;
@@ -1075,6 +1124,7 @@ async function salvarGasto() {
     dataStr: fmtData(fromInput(dataS)),
   };
 
+  // Atualiza cache local imediatamente (UI responsiva)
   if (editId) {
     const i = gastos.findIndex(g=>g.id===editId);
     if (i !== -1) gastos[i] = payload; else gastos.push(payload);
@@ -1082,32 +1132,41 @@ async function salvarGasto() {
     gastos.push(payload);
   }
   localStorage.setItem('gastos_v2', JSON.stringify(gastos));
+  fecharForm();
+  renderSemana();
 
+  // Envia ao Sheets e depois re-sincroniza para garantir consistência
   if (CFG.url) {
     try {
       await fetch(CFG.url, { method:'POST', body: JSON.stringify({ acao: editId?'editar':'adicionar', ...payload }) });
       toast('✅ Salvo no Google Sheets!');
-    } catch { toast('💾 Salvo localmente (Sheets offline)'); }
+      await sincronizarDoSheets(true);
+    } catch {
+      toast('💾 Salvo localmente — sincronizará quando online');
+    }
   } else {
-    toast('💾 Salvo localmente');
+    toast('⚠️ URL do Sheets não configurada (aba Config)');
   }
 
-  fecharForm();
   btn.disabled = false;
   btn.textContent = 'Salvar';
-  renderSemana();
 }
 
 async function excluirGasto() {
   if (!editId || !confirm('Excluir esta despesa?')) return;
   gastos = gastos.filter(g=>g.id!==editId);
   localStorage.setItem('gastos_v2', JSON.stringify(gastos));
-  if (CFG.url) {
-    try { await fetch(CFG.url, { method:'POST', body: JSON.stringify({ acao:'excluir', id:editId }) }); } catch {}
-  }
-  toast('🗑️ Despesa excluída');
   fecharForm();
   renderSemana();
+  if (CFG.url) {
+    try {
+      await fetch(CFG.url, { method:'POST', body: JSON.stringify({ acao:'excluir', id:editId }) });
+      toast('🗑️ Despesa excluída');
+      await sincronizarDoSheets(true);
+    } catch { toast('🗑️ Excluído localmente'); }
+  } else {
+    toast('🗑️ Despesa excluída');
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -1125,7 +1184,14 @@ function toast(msg) {
 // ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
+telaAtual = 0;
 renderSemana();
+// Busca dados do Sheets assim que o app abre
+sincronizarDoSheets(true);
+// Re-sincroniza quando o usuário volta para o app (troca de aba/minimizar)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') sincronizarDoSheets(true);
+});
 </script>
 </body>
 </html>
