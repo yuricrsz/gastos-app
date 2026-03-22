@@ -1,1240 +1,1130 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="Gastos"/>
-  <meta name="theme-color" content="#0f0f14"/>
-  <link rel="manifest" href="manifest.json"/>
-  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
-  <title>Controle de Gastos</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Gastos"/>
+<meta name="theme-color" content="#F2F2F7"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<title>Controle de Gastos</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<!-- SF Pro / system font stack igual ao iOS -->
+<style>
+@supports (font: -apple-system-body) {
+  :root { --font: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif; }
+}
+@supports not (font: -apple-system-body) {
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  :root { --font: 'Inter', 'Helvetica Neue', sans-serif; }
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 
-  <style>
-    :root {
-      --bg:        #0f0f14;
-      --bg2:       #17171f;
-      --bg3:       #1e1e28;
-      --border:    rgba(255,255,255,0.08);
-      --text:      #f0efe8;
-      --muted:     rgba(240,239,232,0.45);
-      --al:        #e8622a;
-      --al-soft:   rgba(232,98,42,0.15);
-      --al-mid:    rgba(232,98,42,0.30);
-      --en:        #8b5cf6;
-      --en-soft:   rgba(139,92,246,0.15);
-      --en-mid:    rgba(139,92,246,0.30);
-      --ok:        #34d399;
-      --nok:       #f87171;
-      --warn:      #fbbf24;
-      --radius:    16px;
-      --radius-sm: 10px;
-    }
+<style>
+/* ── Tokens ─────────────────────────────────────────────── */
+:root {
+  --font: -apple-system, "SF Pro Display", "SF Pro Text", Inter, "Helvetica Neue", sans-serif;
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  /* iOS system colors */
+  --bg:          #F2F2F7;
+  --bg-card:     #FFFFFF;
+  --bg-input:    #F2F2F7;
+  --bg-grouped:  #F2F2F7;
 
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      -webkit-font-smoothing: antialiased;
-      overscroll-behavior: none;
-    }
+  --label:       #000000;
+  --label2:      rgba(60,60,67,0.6);
+  --label3:      rgba(60,60,67,0.3);
+  --separator:   rgba(60,60,67,0.12);
+  --separator-op:rgba(60,60,67,0.06);
 
-    /* ── Layout shell ────────────────────────────── */
-    #app {
-      display: flex;
-      flex-direction: column;
-      height: 100dvh;
-      max-width: 480px;
-      margin: 0 auto;
-    }
+  /* Category colors — vibrant iOS palette */
+  --al:          #FF6B35;   /* laranja vibrante */
+  --al-light:    #FFF0EB;
+  --al-mid:      rgba(255,107,53,0.18);
+  --en:          #7B5EA7;   /* roxo iOS */
+  --en-light:    #F2EDFA;
+  --en-mid:      rgba(123,94,167,0.18);
 
-    /* ── Header ──────────────────────────────────── */
-    header {
-      padding: 18px 20px 12px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg);
-      position: sticky; top: 0; z-index: 10;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .header-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 22px;
-      letter-spacing: -0.3px;
-    }
-    .header-sub {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 1px;
-    }
-    .header-week {
-      text-align: right;
-      font-size: 11px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-    .header-week strong {
-      color: var(--text);
-      font-size: 12px;
-    }
+  /* System colors */
+  --blue:        #007AFF;
+  --green:       #34C759;
+  --red:         #FF3B30;
+  --yellow:      #FF9F0A;
+  --teal:        #5AC8FA;
 
-    /* ── Scroll area ─────────────────────────────── */
-    main {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px 16px 8px;
-      -webkit-overflow-scrolling: touch;
-    }
+  --radius-card: 16px;
+  --radius-sm:   12px;
+  --radius-xs:   8px;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.04);
+  --shadow-fab:  0 4px 16px rgba(0,122,255,0.35), 0 1px 4px rgba(0,0,0,0.12);
+}
 
-    /* ── Bottom nav ──────────────────────────────── */
-    nav {
-      display: flex;
-      border-top: 1px solid var(--border);
-      background: var(--bg);
-      padding-bottom: env(safe-area-inset-bottom, 8px);
-    }
-    nav button {
-      flex: 1;
-      background: none;
-      border: none;
-      color: var(--muted);
-      padding: 12px 0;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 11px;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      transition: color .2s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    nav button.active { color: var(--text); }
-    nav button .nav-icon { font-size: 20px; }
+/* ── Reset ───────────────────────────────────────────────── */
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; background:var(--bg); color:var(--label); font-family:var(--font); -webkit-font-smoothing:antialiased; overscroll-behavior:none; }
 
-    /* ── Tela ────────────────────────────────────── */
-    .screen { display: none; }
-    .screen.active { display: block; }
+/* ── Shell ───────────────────────────────────────────────── */
+#app { display:flex; flex-direction:column; height:100dvh; max-width:430px; margin:0 auto; position:relative; }
 
-    /* ── Cards de resumo ─────────────────────────── */
-    .summary-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .summary-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px;
-    }
-    .summary-card.full { grid-column: 1/-1; }
-    .card-label {
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .6px;
-      margin-bottom: 6px;
-    }
-    .card-emoji { font-size: 14px; margin-right: 4px; }
-    .card-value {
-      font-family: 'DM Serif Display', serif;
-      font-size: 24px;
-      letter-spacing: -0.5px;
-      line-height: 1;
-    }
-    .card-value.ok   { color: var(--ok); }
-    .card-value.nok  { color: var(--nok); }
-    .card-value.warn { color: var(--warn); }
-    .card-sub {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 5px;
-    }
-    .card-bar {
-      height: 4px;
-      border-radius: 2px;
-      background: var(--border);
-      margin-top: 10px;
-      overflow: hidden;
-    }
-    .card-bar-fill {
-      height: 100%;
-      border-radius: 2px;
-      transition: width .5s ease;
-    }
+/* ── Header iOS-style ────────────────────────────────────── */
+.ios-header {
+  background: rgba(242,242,247,0.92);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid var(--separator);
+  padding: 12px 20px 10px;
+  position: sticky; top: 0; z-index: 100;
+}
+.ios-header-top {
+  display: flex; justify-content: space-between; align-items: flex-end;
+}
+.ios-large-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  line-height: 1;
+}
+.ios-header-meta {
+  text-align: right;
+  font-size: 12px;
+  color: var(--label2);
+  line-height: 1.4;
+}
+.ios-header-meta strong { color: var(--label); font-weight: 600; }
+.ios-header-sub {
+  font-size: 13px;
+  color: var(--label2);
+  margin-top: 3px;
+  font-weight: 400;
+}
 
-    /* Alimentação card */
-    .card-al { border-color: var(--al-mid); }
-    .card-al .card-bar-fill { background: var(--al); }
+/* ── Scroll ──────────────────────────────────────────────── */
+main {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 20px 16px 100px;
+}
 
-    /* Entretenimento card */
-    .card-en { border-color: var(--en-mid); }
-    .card-en .card-bar-fill { background: var(--en); }
+/* ── Section label (iOS grouped style) ──────────────────── */
+.section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label2);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin: 24px 4px 8px;
+}
+.section-label:first-child { margin-top: 4px; }
 
-    /* ── Section header ──────────────────────────── */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-    .section-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 17px;
-    }
-    .section-action {
-      font-size: 12px;
-      color: var(--muted);
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--muted);
-      font-family: 'DM Sans', sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .section-action:hover { color: var(--text); }
+/* ── Ring chart ──────────────────────────────────────────── */
+.ring-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.ring-wrap { position: relative; flex-shrink: 0; }
+.ring-svg { transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: var(--bg); stroke-width: 10; }
+.ring-fill  { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset .6s cubic-bezier(.4,0,.2,1); }
+.ring-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.ring-pct { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+.ring-pct-label { font-size: 9px; font-weight: 600; color: var(--label2); text-transform: uppercase; letter-spacing: 0.3px; }
 
-    /* ── Expense list ────────────────────────────── */
-    .expense-list { display: flex; flex-direction: column; gap: 8px; }
+.ring-info { flex: 1; min-width: 0; }
+.ring-title { font-size: 13px; font-weight: 600; color: var(--label2); margin-bottom: 6px; }
+.ring-value { font-size: 30px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+.ring-sub   { font-size: 13px; color: var(--label2); margin-top: 4px; }
+.ring-bal   { font-size: 14px; font-weight: 600; margin-top: 6px; }
 
-    .expense-item {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 12px 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-      transition: background .15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .expense-item:active { background: var(--bg3); }
-    .expense-item.al { border-left: 3px solid var(--al); }
-    .expense-item.en { border-left: 3px solid var(--en); }
+/* ── Summary card total ──────────────────────────────────── */
+.total-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 18px 20px;
+  margin-bottom: 12px;
+}
+.total-card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px;
+}
+.total-card-title { font-size: 15px; font-weight: 600; }
+.total-big { font-size: 36px; font-weight: 800; letter-spacing: -1.5px; line-height: 1; }
+.total-sub { font-size: 14px; color: var(--label2); margin-top: 4px; }
 
-    .expense-icon {
-      font-size: 20px;
-      width: 36px; height: 36px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 10px;
-      flex-shrink: 0;
-    }
-    .expense-icon.al { background: var(--al-soft); }
-    .expense-icon.en { background: var(--en-soft); }
+/* Bar progress */
+.prog-bar {
+  height: 6px; border-radius: 3px;
+  background: var(--bg); margin-top: 14px; overflow: hidden;
+}
+.prog-fill {
+  height: 100%; border-radius: 3px;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
 
-    .expense-info { flex: 1; min-width: 0; }
-    .expense-title {
-      font-weight: 500;
-      font-size: 14px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .expense-meta {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-    .expense-right { text-align: right; flex-shrink: 0; }
-    .expense-value {
-      font-family: 'DM Serif Display', serif;
-      font-size: 16px;
-    }
-    .expense-pay {
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
+/* ── Badge / pill ────────────────────────────────────────── */
+.pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 600;
+  padding: 4px 10px; border-radius: 100px;
+}
+.pill.ok     { background: rgba(52,199,89,.14);  color: #1A9E3A; }
+.pill.warn   { background: rgba(255,159,10,.14); color: #C47800; }
+.pill.nok    { background: rgba(255,59,48,.12);  color: #D52B22; }
+.pill.neutral{ background: var(--bg); color: var(--label2); }
 
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--muted);
-    }
-    .empty-icon { font-size: 40px; margin-bottom: 12px; }
-    .empty-text { font-size: 14px; line-height: 1.5; }
+/* ── Week nav ────────────────────────────────────────────── */
+.week-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  padding: 10px 8px;
+  margin-bottom: 4px;
+}
+.week-nav-btn {
+  background: var(--bg); border: none; border-radius: 50%;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--blue); cursor: pointer;
+  font-weight: 600; transition: opacity .15s;
+}
+.week-nav-btn:disabled { opacity: .25; cursor: default; }
+.week-nav-center { text-align: center; }
+.week-nav-title { font-size: 15px; font-weight: 600; }
+.week-nav-dates { font-size: 12px; color: var(--label2); margin-top: 1px; }
 
-    /* ── FAB (botão flutuante) ────────────────────── */
-    .fab {
-      position: fixed;
-      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-      right: calc(50% - 220px + 16px);
-      width: 56px; height: 56px;
-      border-radius: 50%;
-      background: var(--text);
-      color: var(--bg);
-      border: none;
-      font-size: 28px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 20px rgba(0,0,0,.5);
-      transition: transform .15s;
-      z-index: 20;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .fab:active { transform: scale(.92); }
+/* ── Expense list (iOS grouped) ─────────────────────────── */
+.expense-group {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.expense-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--separator-op);
+  cursor: pointer; transition: background .12s;
+  position: relative;
+}
+.expense-row:last-child { border-bottom: none; }
+.expense-row:active { background: var(--bg); }
 
-    @media (max-width: 480px) {
-      .fab { right: 16px; }
-    }
+.expense-icon-wrap {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; flex-shrink: 0;
+}
+.expense-icon-wrap.al { background: var(--al-light); }
+.expense-icon-wrap.en { background: var(--en-light); }
 
-    /* ── Modal / Drawer ──────────────────────────── */
-    .overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.6);
-      backdrop-filter: blur(4px);
-      z-index: 30;
-      display: none;
-      align-items: flex-end;
-      justify-content: center;
-    }
-    .overlay.open { display: flex; }
+.expense-body { flex: 1; min-width: 0; }
+.expense-title { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.expense-meta  { font-size: 12px; color: var(--label2); margin-top: 1px; }
+.expense-right { text-align: right; flex-shrink: 0; }
+.expense-value { font-size: 15px; font-weight: 600; }
+.expense-pay   { font-size: 11px; color: var(--label2); margin-top: 1px; }
 
-    .drawer {
-      background: var(--bg2);
-      border-radius: 24px 24px 0 0;
-      border: 1px solid var(--border);
-      border-bottom: none;
-      width: 100%;
-      max-width: 480px;
-      padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
-      animation: slideUp .25s ease;
-    }
-    @keyframes slideUp {
-      from { transform: translateY(60px); opacity: 0; }
-      to   { transform: translateY(0);    opacity: 1; }
-    }
+/* Swipe hint chevron */
+.expense-chevron { font-size: 13px; color: var(--label3); margin-left: 4px; }
 
-    .drawer-handle {
-      width: 36px; height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin: 0 auto 20px;
-    }
-    .drawer-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 20px;
-      margin-bottom: 20px;
-    }
+.empty-card {
+  background: var(--bg-card); border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 40px 20px; text-align: center;
+}
+.empty-icon { font-size: 44px; margin-bottom: 10px; }
+.empty-text { font-size: 14px; color: var(--label2); line-height: 1.5; }
 
-    /* ── Formulário ──────────────────────────────── */
-    .form-group { margin-bottom: 16px; }
-    .form-label {
-      display: block;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .6px;
-      color: var(--muted);
-      margin-bottom: 7px;
-    }
-    .form-input {
-      width: 100%;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      padding: 12px 14px;
-      outline: none;
-      transition: border-color .2s;
-      -webkit-appearance: none;
-    }
-    .form-input:focus { border-color: rgba(255,255,255,.3); }
+/* ── Section action ──────────────────────────────────────── */
+.section-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.section-action { font-size:13px; color:var(--blue); background:none; border:none; cursor:pointer; font-family:var(--font); font-weight:500; }
 
-    .seg-buttons {
-      display: flex;
-      gap: 8px;
-    }
-    .seg-btn {
-      flex: 1;
-      padding: 11px 8px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
-      background: var(--bg3);
-      color: var(--muted);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      text-align: center;
-      transition: all .15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .seg-btn.active-al {
-      background: var(--al-soft);
-      border-color: var(--al);
-      color: var(--al);
-    }
-    .seg-btn.active-en {
-      background: var(--en-soft);
-      border-color: var(--en);
-      color: var(--en);
-    }
-    .seg-btn.active-deb {
-      background: rgba(52,211,153,.12);
-      border-color: var(--ok);
-      color: var(--ok);
-    }
-    .seg-btn.active-cred {
-      background: rgba(251,191,36,.12);
-      border-color: var(--warn);
-      color: var(--warn);
-    }
+/* ── Bottom tab bar ──────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  background: rgba(249,249,249,0.94);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-top: 0.5px solid var(--separator);
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+  position: relative; z-index: 100;
+}
+.tab-btn {
+  flex: 1; background: none; border: none;
+  padding: 8px 0 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  cursor: pointer; color: var(--label2);
+  font-family: var(--font); font-size: 10px; font-weight: 500;
+  transition: color .15s;
+}
+.tab-btn.active { color: var(--blue); }
+.tab-icon { font-size: 22px; line-height: 1; }
 
-    .btn-primary {
-      width: 100%;
-      padding: 14px;
-      border-radius: var(--radius-sm);
-      background: var(--text);
-      color: var(--bg);
-      border: none;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: opacity .15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn-primary:active { opacity: .8; }
-    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+/* ── FAB ─────────────────────────────────────────────────── */
+.fab {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 12px);
+  right: calc(50% - 200px + 16px);
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--blue);
+  color: #fff; border: none; font-size: 26px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-fab);
+  cursor: pointer; z-index: 99;
+  transition: transform .15s, box-shadow .15s;
+}
+.fab:active { transform: scale(.92); box-shadow: 0 2px 8px rgba(0,122,255,.3); }
+@media (max-width: 430px) { .fab { right: 16px; } }
 
-    .btn-danger {
-      width: 100%;
-      padding: 13px;
-      border-radius: var(--radius-sm);
-      background: rgba(248,113,113,.1);
-      color: var(--nok);
-      border: 1px solid rgba(248,113,113,.3);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      margin-top: 8px;
-      -webkit-tap-highlight-color: transparent;
-    }
+/* ── Sheets (drawer) ─────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 200; display: none;
+  align-items: flex-end; justify-content: center;
+}
+.overlay.open { display: flex; }
 
-    /* ── Toast ───────────────────────────────────── */
-    .toast {
-      position: fixed;
-      bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-      left: 50%; transform: translateX(-50%) translateY(20px);
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 10px 20px;
-      font-size: 13px;
-      font-weight: 500;
-      white-space: nowrap;
-      opacity: 0;
-      transition: opacity .2s, transform .2s;
-      z-index: 50;
-      pointer-events: none;
-    }
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
+.sheet {
+  background: var(--bg-card);
+  border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 430px;
+  padding: 0 0 calc(16px + env(safe-area-inset-bottom, 0px));
+  animation: sheetUp .28s cubic-bezier(.32,0,.67,0) forwards;
+  max-height: 92dvh;
+  overflow-y: auto;
+}
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.sheet-handle {
+  width: 36px; height: 5px; background: var(--label3);
+  border-radius: 3px; margin: 10px auto 0;
+}
+.sheet-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 0.5px solid var(--separator);
+}
+.sheet-title { font-size: 17px; font-weight: 700; }
+.sheet-close {
+  background: var(--bg); border: none; border-radius: 50%;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--label2); cursor: pointer;
+}
 
-    /* ── Resumo mensal ───────────────────────────── */
-    .month-section { margin-bottom: 24px; }
-    .month-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 18px;
-      margin-bottom: 12px;
-      color: var(--muted);
-    }
-    .month-title span { color: var(--text); }
+/* ── Form elements ───────────────────────────────────────── */
+.form-section { padding: 16px 20px; border-bottom: 0.5px solid var(--separator-op); }
+.form-section:last-of-type { border-bottom: none; }
+.form-label-top { font-size: 12px; font-weight: 600; color: var(--label2); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px; }
 
-    /* ── Status badge ────────────────────────────── */
-    .badge {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 500;
-      padding: 2px 8px;
-      border-radius: 100px;
-    }
-    .badge.ok   { background: rgba(52,211,153,.15);  color: var(--ok); }
-    .badge.nok  { background: rgba(248,113,113,.15); color: var(--nok); }
-    .badge.warn { background: rgba(251,191,36,.15);  color: var(--warn); }
-    .badge.neutral { background: var(--bg3); color: var(--muted); }
+.ios-input {
+  width: 100%; background: var(--bg-input);
+  border: none; border-radius: var(--radius-xs);
+  color: var(--label); font-family: var(--font);
+  font-size: 16px; padding: 12px 14px;
+  outline: none; -webkit-appearance: none;
+}
+.ios-input::placeholder { color: var(--label3); }
 
-    /* ── Config tela ─────────────────────────────── */
-    .config-section { margin-bottom: 24px; }
-    .config-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .6px;
-      color: var(--muted);
-      margin-bottom: 12px;
-    }
-    .config-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-    .config-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .config-row:last-child { border-bottom: none; }
-    .config-row-label { font-size: 14px; }
-    .config-row-value { font-size: 13px; color: var(--muted); }
-    .config-input-row {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .config-input-row:last-child { border-bottom: none; }
-    .config-input-row label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
-    .config-input-row input {
-      width: 100%;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      padding: 9px 12px;
-      outline: none;
-    }
-    .btn-save {
-      width: 100%;
-      padding: 13px;
-      border-radius: var(--radius-sm);
-      background: var(--text);
-      color: var(--bg);
-      border: none;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 12px;
-    }
+/* Segment control */
+.seg-ctrl {
+  display: flex; background: var(--bg-input);
+  border-radius: var(--radius-xs); padding: 3px; gap: 3px;
+}
+.seg-opt {
+  flex: 1; padding: 9px 8px; border: none; border-radius: 7px;
+  background: transparent; color: var(--label2);
+  font-family: var(--font); font-size: 14px; font-weight: 500;
+  cursor: pointer; text-align: center; transition: all .18s;
+}
+.seg-opt.active {
+  background: var(--bg-card);
+  color: var(--label);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+.seg-opt.active-al { background: var(--al); color: #fff; }
+.seg-opt.active-en { background: var(--en); color: #fff; }
 
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 20px 0;
-    }
+/* Action buttons */
+.btn-ios {
+  display: block; width: calc(100% - 40px);
+  margin: 0 20px; padding: 15px;
+  border: none; border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: 16px; font-weight: 600;
+  cursor: pointer; text-align: center; transition: opacity .15s;
+}
+.btn-ios:active { opacity: .8; }
+.btn-ios:disabled { opacity: .4; }
+.btn-ios.primary { background: var(--blue); color: #fff; margin-top: 8px; }
+.btn-ios.danger  { background: rgba(255,59,48,.1); color: var(--red); margin-top: 8px; }
 
-    /* ── Nav semana ──────────────────────────────── */
-    .week-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px 14px;
-    }
-    .week-nav-btn {
-      background: none; border: none; color: var(--muted);
-      font-size: 18px; cursor: pointer; padding: 4px 8px;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .week-nav-btn:disabled { opacity: .25; cursor: default; }
-    .week-nav-label { text-align: center; }
-    .week-nav-title { font-weight: 600; font-size: 14px; }
-    .week-nav-dates { font-size: 11px; color: var(--muted); margin-top: 2px; }
+/* ── Month summary rows ──────────────────────────────────── */
+.stat-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 16px;
+  border-bottom: 0.5px solid var(--separator-op);
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-row-left { display: flex; align-items: center; gap: 10px; }
+.stat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.stat-label { font-size: 15px; font-weight: 500; }
+.stat-sub { font-size: 12px; color: var(--label2); margin-top: 1px; }
+.stat-value { font-size: 15px; font-weight: 600; }
 
-    /* ── Loading ─────────────────────────────────── */
-    .spinner {
-      width: 18px; height: 18px;
-      border: 2px solid rgba(15,15,20,.3);
-      border-top-color: var(--bg);
-      border-radius: 50%;
-      animation: spin .6s linear infinite;
-      margin: 0 auto;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
+/* ── Config rows ─────────────────────────────────────────── */
+.config-group {
+  background: var(--bg-card); border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card); overflow: hidden; margin-bottom: 12px;
+}
+.config-row {
+  display: flex; align-items: center;
+  padding: 14px 16px;
+  border-bottom: 0.5px solid var(--separator-op);
+}
+.config-row:last-child { border-bottom: none; }
+.config-row-label { font-size: 15px; font-weight: 500; flex: 1; }
+.config-row-value { font-size: 15px; color: var(--label2); }
+.config-input-full {
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--separator-op);
+}
+.config-input-full:last-child { border-bottom: none; }
+.config-input-full label { font-size: 12px; color: var(--label2); font-weight: 500; margin-bottom: 6px; display: block; }
+
+/* ── Toast ───────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  left: 50%; transform: translateX(-50%) translateY(12px);
+  background: rgba(30,30,30,.88);
+  backdrop-filter: blur(12px);
+  color: #fff; border-radius: 100px;
+  padding: 10px 20px; font-size: 14px; font-weight: 500;
+  white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity .2s, transform .2s; z-index: 999;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Spinner ─────────────────────────────────────────────── */
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,.4);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin .6s linear infinite; margin: 0 auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Screen toggle ───────────────────────────────────────── */
+.screen { display: none; }
+.screen.active { display: block; }
+</style>
 </head>
 <body>
 <div id="app">
 
-  <!-- ── HEADER ── -->
-  <header>
-    <div>
-      <div class="header-title">💰 Gastos</div>
-      <div class="header-sub" id="headerSub">Carregando…</div>
+  <!-- HEADER -->
+  <div class="ios-header">
+    <div class="ios-header-top">
+      <div class="ios-large-title" id="pageTitle">Esta Semana</div>
+      <div class="ios-header-meta" id="headerMeta"></div>
     </div>
-    <div class="header-week" id="headerWeek"></div>
-  </header>
+    <div class="ios-header-sub" id="headerSub"></div>
+  </div>
 
-  <!-- ── MAIN ── -->
-  <main>
+  <!-- MAIN -->
+  <main id="mainScroll">
 
-    <!-- TELA 1: SEMANA -->
+    <!-- ── SEMANA ── -->
     <div class="screen active" id="screenSemana">
-      <div class="summary-grid">
-        <div class="summary-card card-al" id="cardAl">
-          <div class="card-label"><span class="card-emoji">🍽️</span>Alimentação</div>
-          <div class="card-value" id="alGasto">—</div>
-          <div class="card-sub" id="alSub">Previsto: —</div>
-          <div class="card-bar"><div class="card-bar-fill" id="alBar" style="width:0%"></div></div>
-        </div>
-        <div class="summary-card card-en" id="cardEn">
-          <div class="card-label"><span class="card-emoji">🎭</span>Entretenimento</div>
-          <div class="card-value" id="enGasto">—</div>
-          <div class="card-sub" id="enSub">Previsto: —</div>
-          <div class="card-bar"><div class="card-bar-fill" id="enBar" style="width:0%"></div></div>
-        </div>
-        <div class="summary-card full" id="cardTotal">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div>
-              <div class="card-label">Total da semana</div>
-              <div class="card-value" id="totalGasto">—</div>
-              <div class="card-sub" id="totalSub">Previsto: —</div>
-            </div>
-            <div id="totalBadge"></div>
-          </div>
-          <div class="card-bar"><div class="card-bar-fill" style="background:var(--text);width:0%" id="totalBar"></div></div>
-        </div>
-      </div>
 
-      <div class="week-nav">
-        <button class="week-nav-btn" id="btnPrevWeek" onclick="navegarSemana(-1)">‹</button>
-        <div class="week-nav-label">
-          <div class="week-nav-title" id="weekNavTitle">Semana atual</div>
+      <div class="week-nav" style="margin-bottom:16px">
+        <button class="week-nav-btn" id="btnPrev" onclick="navegarSemana(-1)">‹</button>
+        <div class="week-nav-center">
+          <div class="week-nav-title" id="weekNavLabel">Semana atual</div>
           <div class="week-nav-dates" id="weekNavDates"></div>
         </div>
-        <button class="week-nav-btn" id="btnNextWeek" onclick="navegarSemana(1)">›</button>
+        <button class="week-nav-btn" id="btnNext" onclick="navegarSemana(1)" disabled>›</button>
       </div>
 
-      <div class="section-header">
-        <div class="section-title">Despesas</div>
+      <!-- Ring cards por categoria -->
+      <div class="section-label">Por categoria</div>
+
+      <div class="ring-card" id="ringAl">
+        <div class="ring-wrap">
+          <svg class="ring-svg" width="72" height="72" viewBox="0 0 72 72">
+            <circle class="ring-track" cx="36" cy="36" r="30"/>
+            <circle class="ring-fill" id="ringAlFill" cx="36" cy="36" r="30"
+              stroke="var(--al)" stroke-dasharray="188.5" stroke-dashoffset="188.5"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-pct" id="ringAlPct" style="color:var(--al)">0%</div>
+          </div>
+        </div>
+        <div class="ring-info">
+          <div class="ring-title">🍽️ Alimentação</div>
+          <div class="ring-value" id="alVal" style="color:var(--al)">R$ 0</div>
+          <div class="ring-sub" id="alPrev"></div>
+          <div class="ring-bal" id="alBal"></div>
+        </div>
+      </div>
+
+      <div class="ring-card" id="ringEn">
+        <div class="ring-wrap">
+          <svg class="ring-svg" width="72" height="72" viewBox="0 0 72 72">
+            <circle class="ring-track" cx="36" cy="36" r="30"/>
+            <circle class="ring-fill" id="ringEnFill" cx="36" cy="36" r="30"
+              stroke="var(--en)" stroke-dasharray="188.5" stroke-dashoffset="188.5"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-pct" id="ringEnPct" style="color:var(--en)">0%</div>
+          </div>
+        </div>
+        <div class="ring-info">
+          <div class="ring-title">🎭 Entretenimento</div>
+          <div class="ring-value" id="enVal" style="color:var(--en)">R$ 0</div>
+          <div class="ring-sub" id="enPrev"></div>
+          <div class="ring-bal" id="enBal"></div>
+        </div>
+      </div>
+
+      <!-- Total card -->
+      <div class="section-label">Total da semana</div>
+      <div class="total-card">
+        <div class="total-card-header">
+          <div class="total-card-title">Gasto total</div>
+          <div id="totalPill"></div>
+        </div>
+        <div class="total-big" id="totalVal">R$ 0,00</div>
+        <div class="total-sub" id="totalPrev"></div>
+        <div class="prog-bar">
+          <div class="prog-fill" id="totalBar" style="width:0%;background:var(--blue)"></div>
+        </div>
+      </div>
+
+      <!-- Despesas -->
+      <div class="section-label" style="margin-top:28px"></div>
+      <div class="section-row">
+        <div class="section-label" style="margin:0">Despesas</div>
         <button class="section-action" onclick="inverterOrdem()">⇅ Inverter ordem</button>
       </div>
-      <div class="expense-list" id="expenseList">
-        <div class="empty-state">
-          <div class="empty-icon">🧾</div>
-          <div class="empty-text">Nenhuma despesa nesta semana.<br>Toque em + para adicionar.</div>
-        </div>
-      </div>
+      <div id="expenseList"></div>
+
     </div>
 
-    <!-- TELA 2: MÊS -->
+    <!-- ── MÊS ── -->
     <div class="screen" id="screenMes">
-      <div id="monthContent">
-        <div class="empty-state">
-          <div class="empty-icon">📅</div>
-          <div class="empty-text">Carregando resumo mensal…</div>
-        </div>
-      </div>
+      <div id="monthContent"></div>
     </div>
 
-    <!-- TELA 3: CONFIG -->
+    <!-- ── CONFIG ── -->
     <div class="screen" id="screenConfig">
-      <div class="config-section">
-        <div class="config-title">Conexão com Google Sheets</div>
-        <div class="config-card">
-          <div class="config-input-row">
-            <label>URL do Web App (Google Apps Script)</label>
-            <input type="url" id="cfgUrl" placeholder="https://script.google.com/macros/s/…/exec"/>
-          </div>
+      <div class="section-label">Google Sheets</div>
+      <div class="config-group">
+        <div class="config-input-full">
+          <label>URL do Web App (Google Apps Script)</label>
+          <input class="ios-input" id="cfgUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec"/>
         </div>
-        <button class="btn-save" onclick="salvarConfig()">Salvar configuração</button>
       </div>
+      <button class="btn-ios primary" onclick="salvarConfig()" style="margin-bottom:24px">Salvar URL</button>
 
-      <div class="config-section">
-        <div class="config-title">Budget mensal</div>
-        <div class="config-card">
-          <div class="config-input-row">
-            <label>🍽️ Alimentação (R$)</label>
-            <input type="number" id="cfgBudgetAl" placeholder="1800"/>
-          </div>
-          <div class="config-input-row">
-            <label>🎭 Entretenimento (R$)</label>
-            <input type="number" id="cfgBudgetEn" placeholder="1800"/>
-          </div>
+      <div class="section-label">Budget mensal</div>
+      <div class="config-group">
+        <div class="config-input-full">
+          <label>🍽️ Alimentação (R$)</label>
+          <input class="ios-input" id="cfgBudgetAl" type="number" placeholder="1800"/>
         </div>
-        <button class="btn-save" onclick="salvarBudget()">Salvar budget</button>
+        <div class="config-input-full" style="border-bottom:none">
+          <label>🎭 Entretenimento (R$)</label>
+          <input class="ios-input" id="cfgBudgetEn" type="number" placeholder="1800"/>
+        </div>
       </div>
+      <button class="btn-ios primary" onclick="salvarBudget()" style="margin-bottom:24px">Salvar budget</button>
 
-      <div class="divider"></div>
-      <div style="text-align:center; color:var(--muted); font-size:12px; padding-bottom:20px;">
-        Controle de Gastos v1.0<br>
-        <span style="font-size:11px">Dados salvos no Google Sheets</span>
+      <div class="section-label">Sobre</div>
+      <div class="config-group">
+        <div class="config-row">
+          <span class="config-row-label">Versão</span>
+          <span class="config-row-value">1.0</span>
+        </div>
+        <div class="config-row">
+          <span class="config-row-label">Dados</span>
+          <span class="config-row-value">Google Sheets</span>
+        </div>
       </div>
     </div>
 
   </main>
 
-  <!-- ── BOTTOM NAV ── -->
-  <nav>
-    <button class="active" onclick="mostrarTela('semana',this)">
-      <span class="nav-icon">📊</span>Semana
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab0" onclick="irPara(0)">
+      <span class="tab-icon">📊</span>Semana
     </button>
-    <button onclick="mostrarTela('mes',this)">
-      <span class="nav-icon">📅</span>Mês
+    <button class="tab-btn" id="tab1" onclick="irPara(1)">
+      <span class="tab-icon">📅</span>Mês
     </button>
-    <button onclick="mostrarTela('config',this)">
-      <span class="nav-icon">⚙️</span>Config
+    <button class="tab-btn" id="tab2" onclick="irPara(2)">
+      <span class="tab-icon">⚙️</span>Config
     </button>
-  </nav>
+  </div>
 </div>
 
 <!-- FAB -->
-<button class="fab" onclick="abrirFormulario()" title="Novo gasto">+</button>
+<button class="fab" onclick="abrirForm(null)" aria-label="Novo gasto">
+  <span style="font-size:24px;line-height:1;margin-top:1px">+</span>
+</button>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- DRAWER: Novo / Editar gasto -->
-<div class="overlay" id="overlayForm" onclick="fecharFormulario(event)">
-  <div class="drawer" onclick="event.stopPropagation()">
-    <div class="drawer-handle"></div>
-    <div class="drawer-title" id="drawerTitle">Novo gasto</div>
-
-    <div class="form-group">
-      <label class="form-label">Título</label>
-      <input class="form-input" id="fTitulo" type="text" placeholder="Ex: Mercado, Cinema…" autocomplete="off"/>
+<!-- SHEET: Novo/Editar -->
+<div class="overlay" id="overlayForm" onclick="fecharForm(event)">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title" id="sheetTitle">Novo gasto</div>
+      <button class="sheet-close" onclick="fecharForm()">✕</button>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">Valor (R$)</label>
-      <input class="form-input" id="fValor" type="number" inputmode="decimal" placeholder="0,00" step="0.01" min="0"/>
+    <div class="form-section">
+      <div class="form-label-top">Título</div>
+      <input class="ios-input" id="fTitulo" type="text" placeholder="Ex: Mercado, Cinema…" autocomplete="off"/>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">Categoria</label>
-      <div class="seg-buttons">
-        <button class="seg-btn active-al" id="btnAl" onclick="selecionarCategoria('al')">🍽️ Alimentação</button>
-        <button class="seg-btn" id="btnEn" onclick="selecionarCategoria('en')">🎭 Entretenimento</button>
+    <div class="form-section">
+      <div class="form-label-top">Valor (R$)</div>
+      <input class="ios-input" id="fValor" type="number" inputmode="decimal" placeholder="0,00" step="0.01" min="0"/>
+    </div>
+
+    <div class="form-section">
+      <div class="form-label-top">Categoria</div>
+      <div class="seg-ctrl">
+        <button class="seg-opt active-al" id="sAl" onclick="setCategoria('al')">🍽️ Alimentação</button>
+        <button class="seg-opt" id="sEn" onclick="setCategoria('en')">🎭 Entretenimento</button>
       </div>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">Forma de pagamento</label>
-      <div class="seg-buttons">
-        <button class="seg-btn active-deb" id="btnDeb" onclick="selecionarPag('deb')">Débito/Pix</button>
-        <button class="seg-btn" id="btnCred" onclick="selecionarPag('cred')">Crédito</button>
+    <div class="form-section">
+      <div class="form-label-top">Forma de pagamento</div>
+      <div class="seg-ctrl">
+        <button class="seg-opt active" id="sDeb" onclick="setPag('deb')">Débito / Pix</button>
+        <button class="seg-opt" id="sCred" onclick="setPag('cred')">Crédito</button>
       </div>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">Data</label>
-      <input class="form-input" id="fData" type="date"/>
+    <div class="form-section" style="border-bottom:none">
+      <div class="form-label-top">Data</div>
+      <input class="ios-input" id="fData" type="date"/>
     </div>
 
-    <button class="btn-primary" id="btnSalvar" onclick="salvarGasto()">Salvar gasto</button>
-    <button class="btn-danger" id="btnExcluir" style="display:none" onclick="excluirGasto()">Excluir despesa</button>
+    <button class="btn-ios primary" id="btnSalvar" onclick="salvarGasto()">Salvar</button>
+    <button class="btn-ios danger" id="btnExcluir" style="display:none" onclick="excluirGasto()">Excluir despesa</button>
+    <div style="height:8px"></div>
   </div>
 </div>
 
 <script>
-// ════════════════════════════════════════════════
-// ESTADO GLOBAL
-// ════════════════════════════════════════════════
-let CONFIG = {
-  url:      localStorage.getItem('cfg_url')      || '',
-  budgetAl: parseFloat(localStorage.getItem('cfg_budgetAl')) || 1800,
-  budgetEn: parseFloat(localStorage.getItem('cfg_budgetEn')) || 1800,
+// ══════════════════════════════════════════════
+// CONFIG & STATE
+// ══════════════════════════════════════════════
+const CFG = {
+  get url()      { return localStorage.getItem('cfg_url') || ''; },
+  set url(v)     { localStorage.setItem('cfg_url', v); },
+  get budgetAl() { return parseFloat(localStorage.getItem('cfg_bAl')) || 1800; },
+  set budgetAl(v){ localStorage.setItem('cfg_bAl', v); },
+  get budgetEn() { return parseFloat(localStorage.getItem('cfg_bEn')) || 1800; },
+  set budgetEn(v){ localStorage.setItem('cfg_bEn', v); },
 };
 
-let gastos    = JSON.parse(localStorage.getItem('gastos_cache') || '[]');
-let ordemDesc = true;   // mais recentes primeiro
-let semanaOffset = 0;   // 0 = semana atual, -1 = anterior, etc.
-let editandoId = null;
+let gastos     = JSON.parse(localStorage.getItem('gastos_v2') || '[]');
+let semOffset  = 0;
+let ordemDesc  = true;
+let editId     = null;
+let catAtual   = 'al';
+let pagAtual   = 'deb';
 
-// ════════════════════════════════════════════════
-// DATAS / SEMANAS
-// ════════════════════════════════════════════════
-function hoje() {
-  return new Date();
+// ══════════════════════════════════════════════
+// DATE UTILS
+// ══════════════════════════════════════════════
+const hoje = () => new Date();
+
+function segundaDe(d) {
+  const dt = new Date(d);
+  const dow = dt.getDay();
+  dt.setDate(dt.getDate() - (dow === 0 ? 6 : dow - 1));
+  return dt;
 }
 
-function segundaFeiraDe(data) {
-  const d = new Date(data);
-  const dow = d.getDay(); // 0=dom,1=seg…6=sab
-  const diff = dow === 0 ? -6 : 1 - dow;
-  d.setDate(d.getDate() + diff);
-  return d;
-}
-
-function semanaDe(offset = 0) {
-  const seg = segundaFeiraDe(hoje());
+function semanaDe(offset) {
+  const seg = segundaDe(hoje());
   seg.setDate(seg.getDate() + offset * 7);
   const dom = new Date(seg);
   dom.setDate(dom.getDate() + 6);
   return { seg, dom };
 }
 
-function isoWeek(data) {
-  const d = new Date(Date.UTC(data.getFullYear(), data.getMonth(), data.getDate()));
-  const day = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - day);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+function isoWeek(d) {
+  const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = dt.getUTCDay() || 7;
+  dt.setUTCDate(dt.getUTCDate() + 4 - day);
+  const y1 = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+  return Math.ceil((((dt - y1) / 86400000) + 1) / 7);
 }
 
-function semanaNoMes(data) {
-  // número ordinal da segunda-feira dentro do mês
-  const seg = segundaFeiraDe(data);
-  let count = 0, d = new Date(seg.getFullYear(), seg.getMonth(), 1);
-  // avançar até a primeira segunda do mês
-  while (d.getDay() !== 1) d.setDate(d.getDate() + 1);
-  while (d <= seg) { count++; d.setDate(d.getDate() + 7); }
-  return count;
+function semNoMes(d) {
+  const seg = segundaDe(d);
+  let n = 0, cur = new Date(seg.getFullYear(), seg.getMonth(), 1);
+  while (cur.getDay() !== 1) cur.setDate(cur.getDate() + 1);
+  while (cur <= seg) { n++; cur.setDate(cur.getDate() + 7); }
+  return n;
 }
 
-function formatarData(d) {
-  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+function qtdSemanasNoMes(ano, mes) {
+  let n = 0, d = new Date(ano, mes, 1);
+  while (d.getMonth() === mes) { if (d.getDay() === 1) n++; d.setDate(d.getDate() + 1); }
+  return n || 4;
 }
 
-function formatarDataCurta(d) {
-  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
-}
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+               'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-function parseDateInput(str) {
-  // "YYYY-MM-DD"
-  const [y, m, day] = str.split('-').map(Number);
-  return new Date(y, m - 1, day);
-}
-
-function toDateInput(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-}
-
-function nomeMes(n) {
-  return ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-          'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][n];
-}
-
-// ════════════════════════════════════════════════
-// FORMATAÇÃO
-// ════════════════════════════════════════════════
-function formatBRL(v) {
+function fmtBRL(v) {
   return v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
 }
-
-function badgeStatus(gasto, previsto) {
-  if (previsto === 0) return '<span class="badge neutral">—</span>';
-  const bal = previsto - gasto;
-  if (bal >= 0)             return `<span class="badge ok">✅ OK</span>`;
-  if (Math.abs(bal)/previsto <= 0.1) return `<span class="badge warn">⚠️ Atenção</span>`;
-  return `<span class="badge nok">🔴 Estourou</span>`;
+function fmtCurto(d) {
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+}
+function fmtData(d) {
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+function toInput(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fromInput(s) {
+  const [y,m,day] = s.split('-').map(Number);
+  return new Date(y, m-1, day);
 }
 
-function classeBalanco(gasto, previsto) {
-  const bal = previsto - gasto;
+// ══════════════════════════════════════════════
+// STATUS HELPERS
+// ══════════════════════════════════════════════
+function statusClasse(gasto, prev) {
+  if (prev === 0) return 'neutral';
+  const bal = prev - gasto;
   if (bal >= 0) return 'ok';
-  if (Math.abs(bal)/previsto <= 0.1) return 'warn';
+  if (Math.abs(bal)/prev <= 0.1) return 'warn';
   return 'nok';
 }
 
-// ════════════════════════════════════════════════
-// NAVEGAÇÃO
-// ════════════════════════════════════════════════
-function mostrarTela(nome, btn) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('screen' + nome.charAt(0).toUpperCase() + nome.slice(1)).classList.add('active');
-  btn.classList.add('active');
-  if (nome === 'semana') renderSemana();
-  if (nome === 'mes')    renderMes();
-  if (nome === 'config') renderConfig();
+function pillHTML(gasto, prev) {
+  const cl = statusClasse(gasto, prev);
+  const icons = { ok:'✅', warn:'⚠️', nok:'🔴', neutral:'—' };
+  const labels = { ok:'OK', warn:'Atenção', nok:'Estourou', neutral:'—' };
+  return `<span class="pill ${cl}">${icons[cl]} ${labels[cl]}</span>`;
+}
+
+function balText(gasto, prev) {
+  const bal = prev - gasto;
+  if (bal > 0) return `<span style="color:var(--green)">+ ${fmtBRL(bal)} sobrando</span>`;
+  if (bal === 0) return `<span style="color:var(--label2)">No limite</span>`;
+  return `<span style="color:var(--red)">${fmtBRL(Math.abs(bal))} acima</span>`;
+}
+
+// ══════════════════════════════════════════════
+// RING CHART
+// ══════════════════════════════════════════════
+function atualizarRing(fillId, pctId, pct) {
+  const circ = 188.5;
+  const offset = circ - Math.min(pct, 100) / 100 * circ;
+  document.getElementById(fillId).style.strokeDashoffset = offset;
+  document.getElementById(pctId).textContent = Math.round(Math.min(pct,999)) + '%';
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+const TELAS = ['screenSemana','screenMes','screenConfig'];
+const TITULOS = ['Esta Semana','Este Mês','Configurações'];
+
+function irPara(idx) {
+  TELAS.forEach((t,i) => {
+    document.getElementById(t).classList.toggle('active', i === idx);
+    document.getElementById(`tab${i}`).classList.toggle('active', i === idx);
+  });
+  document.getElementById('pageTitle').textContent = TITULOS[idx];
+  if (idx === 0) renderSemana();
+  if (idx === 1) renderMes();
+  if (idx === 2) renderConfig();
 }
 
 function navegarSemana(dir) {
-  semanaOffset += dir;
+  semOffset = Math.min(semOffset + dir, 0);
+  document.getElementById('btnNext').disabled = semOffset >= 0;
   renderSemana();
 }
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 // RENDER: SEMANA
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 function gastosNaSemana(seg, dom) {
+  const domFim = new Date(dom.getFullYear(), dom.getMonth(), dom.getDate(), 23, 59, 59);
   return gastos.filter(g => {
-    const d = new Date(g.timestamp);
-    return d >= seg && d <= new Date(dom.getFullYear(), dom.getMonth(), dom.getDate(), 23, 59, 59);
+    const d = new Date(g.ts);
+    return d >= seg && d <= domFim;
   });
 }
 
 function renderSemana() {
-  const { seg, dom } = semanaDe(semanaOffset);
-  const isHoje = semanaOffset === 0;
+  const { seg, dom } = semanaDe(semOffset);
+  const isHoje = semOffset === 0;
+  const semAno = isoWeek(seg);
+  const semMes = semNoMes(seg);
+  const nSems  = qtdSemanasNoMes(seg.getFullYear(), seg.getMonth());
 
   // Header
+  document.getElementById('headerMeta').innerHTML =
+    `<strong>Sem. ${semAno} · ${semMes}ª do mês</strong>`;
   document.getElementById('headerSub').textContent =
-    isHoje ? 'Esta semana' : `Semana de ${formatarDataCurta(seg)}`;
-  document.getElementById('headerWeek').innerHTML =
-    `<strong>Semana ${isoWeek(seg)} · Sem. ${semanaNoMes(seg)} do mês</strong><br>${formatarDataCurta(seg)} – ${formatarData(dom)}`;
+    `${fmtCurto(seg)} – ${fmtData(dom)}`;
 
-  // Nav semana
-  document.getElementById('weekNavTitle').textContent =
-    isHoje ? 'Semana atual' : `Semana de ${formatarDataCurta(seg)}`;
-  document.getElementById('weekNavDates').textContent =
-    `${formatarDataCurta(seg)} – ${formatarData(dom)}`;
-  document.getElementById('btnNextWeek').disabled = semanaOffset >= 0;
+  // Week nav
+  document.getElementById('weekNavLabel').textContent = isHoje ? 'Semana atual' : `Semana ${semAno}`;
+  document.getElementById('weekNavDates').textContent = `${fmtCurto(seg)} – ${fmtData(dom)}`;
 
-  // Budget semanal (proporcional: budget mensal / semanas naquele mês)
-  const semanasDoMes = contagemSemanasNoMes(seg.getFullYear(), seg.getMonth());
-  const prevAl  = CONFIG.budgetAl / semanasDoMes;
-  const prevEn  = CONFIG.budgetEn / semanasDoMes;
-  const prevTot = (CONFIG.budgetAl + CONFIG.budgetEn) / semanasDoMes;
+  // Budget
+  const prevAl  = CFG.budgetAl / nSems;
+  const prevEn  = CFG.budgetEn / nSems;
+  const prevTot = (CFG.budgetAl + CFG.budgetEn) / nSems;
 
-  const lista = gastosNaSemana(seg, dom);
-  const gastoAl  = lista.filter(g => g.categoria === 'al').reduce((s,g) => s + g.valor, 0);
-  const gastoEn  = lista.filter(g => g.categoria === 'en').reduce((s,g) => s + g.valor, 0);
-  const gastoTot = gastoAl + gastoEn;
+  const lista   = gastosNaSemana(seg, dom);
+  const gAl     = lista.filter(g => g.cat === 'al').reduce((s,g) => s+g.valor, 0);
+  const gEn     = lista.filter(g => g.cat === 'en').reduce((s,g) => s+g.valor, 0);
+  const gTot    = gAl + gEn;
 
-  // Cards
-  const alClasse = classeBalanco(gastoAl, prevAl);
-  document.getElementById('alGasto').textContent  = formatBRL(gastoAl);
-  document.getElementById('alGasto').className    = `card-value ${alClasse}`;
-  document.getElementById('alSub').textContent    = `Previsto: ${formatBRL(prevAl)}`;
-  document.getElementById('alBar').style.width    = Math.min(gastoAl/prevAl*100,100) + '%';
+  // Rings
+  atualizarRing('ringAlFill', 'ringAlPct', prevAl ? gAl/prevAl*100 : 0);
+  document.getElementById('alVal').textContent  = fmtBRL(gAl);
+  document.getElementById('alPrev').textContent = `Previsto: ${fmtBRL(prevAl)}`;
+  document.getElementById('alBal').innerHTML    = balText(gAl, prevAl);
 
-  const enClasse = classeBalanco(gastoEn, prevEn);
-  document.getElementById('enGasto').textContent  = formatBRL(gastoEn);
-  document.getElementById('enGasto').className    = `card-value ${enClasse}`;
-  document.getElementById('enSub').textContent    = `Previsto: ${formatBRL(prevEn)}`;
-  document.getElementById('enBar').style.width    = Math.min(gastoEn/prevEn*100,100) + '%';
+  atualizarRing('ringEnFill', 'ringEnPct', prevEn ? gEn/prevEn*100 : 0);
+  document.getElementById('enVal').textContent  = fmtBRL(gEn);
+  document.getElementById('enPrev').textContent = `Previsto: ${fmtBRL(prevEn)}`;
+  document.getElementById('enBal').innerHTML    = balText(gEn, prevEn);
 
-  const totClasse = classeBalanco(gastoTot, prevTot);
-  document.getElementById('totalGasto').textContent = formatBRL(gastoTot);
-  document.getElementById('totalGasto').className   = `card-value ${totClasse}`;
-  document.getElementById('totalSub').textContent   = `Previsto: ${formatBRL(prevTot)}`;
-  document.getElementById('totalBar').style.width   = Math.min(gastoTot/prevTot*100,100) + '%';
-  document.getElementById('totalBadge').innerHTML   = badgeStatus(gastoTot, prevTot);
+  // Total
+  document.getElementById('totalVal').textContent  = fmtBRL(gTot);
+  document.getElementById('totalPrev').textContent = `Previsto: ${fmtBRL(prevTot)}`;
+  document.getElementById('totalPill').innerHTML   = pillHTML(gTot, prevTot);
+  document.getElementById('totalBar').style.width  = Math.min(gTot/prevTot*100, 100) + '%';
+  const bCor = statusClasse(gTot,prevTot);
+  document.getElementById('totalBar').style.background =
+    bCor === 'ok' ? 'var(--green)' : bCor === 'warn' ? 'var(--yellow)' : 'var(--red)';
 
-  // Lista
-  renderListaGastos(lista, seg, dom);
+  renderLista(lista);
 }
 
-function contagemSemanasNoMes(ano, mes) {
-  // contar segundas-feiras no mês
-  let count = 0;
-  const d = new Date(ano, mes, 1);
-  while (d.getMonth() === mes) {
-    if (d.getDay() === 1) count++;
-    d.setDate(d.getDate() + 1);
-  }
-  return count || 4;
-}
-
-function renderListaGastos(lista, seg, dom) {
+function renderLista(lista) {
   const el = document.getElementById('expenseList');
   if (!lista.length) {
-    el.innerHTML = `<div class="empty-state">
+    el.innerHTML = `<div class="empty-card">
       <div class="empty-icon">🧾</div>
       <div class="empty-text">Nenhuma despesa nesta semana.<br>Toque em + para adicionar.</div>
     </div>`;
     return;
   }
-
-  const ordenada = [...lista].sort((a,b) =>
-    ordemDesc ? b.timestamp - a.timestamp : a.timestamp - b.timestamp);
-
-  el.innerHTML = ordenada.map(g => {
-    const d = new Date(g.timestamp);
-    const cat = g.categoria === 'al';
-    return `<div class="expense-item ${g.categoria}" onclick="editarGasto('${g.id}')">
-      <div class="expense-icon ${g.categoria}">${cat ? '🍽️' : '🎭'}</div>
-      <div class="expense-info">
+  const ord = [...lista].sort((a,b) => ordemDesc ? b.ts - a.ts : a.ts - b.ts);
+  el.innerHTML = `<div class="expense-group">${ord.map(g => {
+    const d = new Date(g.ts);
+    return `<div class="expense-row" onclick="abrirForm('${g.id}')">
+      <div class="expense-icon-wrap ${g.cat}">${g.cat==='al'?'🍽️':'🎭'}</div>
+      <div class="expense-body">
         <div class="expense-title">${g.titulo}</div>
-        <div class="expense-meta">${formatarData(d)} · ${cat ? 'Alimentação' : 'Entretenimento'}</div>
+        <div class="expense-meta">${fmtData(d)} · ${g.cat==='al'?'Alimentação':'Entretenimento'}</div>
       </div>
       <div class="expense-right">
-        <div class="expense-value">${formatBRL(g.valor)}</div>
-        <div class="expense-pay">${g.pagamento === 'deb' ? 'Déb/Pix' : 'Crédito'}</div>
+        <div class="expense-value">${fmtBRL(g.valor)}</div>
+        <div class="expense-pay">${g.pag==='deb'?'Déb/Pix':'Crédito'}</div>
       </div>
+      <span class="expense-chevron">›</span>
     </div>`;
-  }).join('');
+  }).join('')}</div>`;
 }
 
 function inverterOrdem() {
   ordemDesc = !ordemDesc;
-  const { seg, dom } = semanaDe(semanaOffset);
-  renderListaGastos(gastosNaSemana(seg, dom), seg, dom);
+  const { seg, dom } = semanaDe(semOffset);
+  renderLista(gastosNaSemana(seg, dom));
 }
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 // RENDER: MÊS
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 function renderMes() {
   const agora = hoje();
   const ano   = agora.getFullYear();
   const mes   = agora.getMonth();
-  const mesNome = nomeMes(mes);
+  const nSems = qtdSemanasNoMes(ano, mes);
 
-  // Gastos do mês
   const lista = gastos.filter(g => {
-    const d = new Date(g.timestamp);
-    return d.getFullYear() === ano && d.getMonth() === mes;
+    const d = new Date(g.ts);
+    return d.getFullYear()===ano && d.getMonth()===mes;
   });
 
-  const gastoAl  = lista.filter(g => g.categoria === 'al').reduce((s,g) => s + g.valor, 0);
-  const gastoEn  = lista.filter(g => g.categoria === 'en').reduce((s,g) => s + g.valor, 0);
-  const gastoTot = gastoAl + gastoEn;
-  const prevAl   = CONFIG.budgetAl;
-  const prevEn   = CONFIG.budgetEn;
-  const prevTot  = prevAl + prevEn;
+  const gAl  = lista.filter(g=>g.cat==='al').reduce((s,g)=>s+g.valor,0);
+  const gEn  = lista.filter(g=>g.cat==='en').reduce((s,g)=>s+g.valor,0);
+  const gTot = gAl+gEn;
+  const pAl  = CFG.budgetAl, pEn=CFG.budgetEn, pTot=pAl+pEn;
 
-  // Agrupar por semana do mês
-  const porSemana = {};
+  const porSem = {};
   lista.forEach(g => {
-    const d = new Date(g.timestamp);
-    const s = semanaNoMes(d);
-    if (!porSemana[s]) porSemana[s] = [];
-    porSemana[s].push(g);
+    const s = semNoMes(new Date(g.ts));
+    if (!porSem[s]) porSem[s]=[];
+    porSem[s].push(g);
   });
 
-  const semanasDoMes = contagemSemanasNoMes(ano, mes);
-
-  let semanasHTML = '';
-  for (let s = 1; s <= semanasDoMes; s++) {
-    const itens = porSemana[s] || [];
-    const gAl   = itens.filter(g => g.categoria === 'al').reduce((a,g) => a+g.valor, 0);
-    const gEn   = itens.filter(g => g.categoria === 'en').reduce((a,g) => a+g.valor, 0);
-    const gTot  = gAl + gEn;
-    const pSem  = prevTot / semanasDoMes;
-
-    semanasHTML += `
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <span style="font-weight:600;font-size:13px">Semana ${s}</span>
-        ${badgeStatus(gTot, pSem)}
+  let semsHTML = '';
+  for (let s=1; s<=nSems; s++) {
+    const its = porSem[s]||[];
+    const sAl = its.filter(g=>g.cat==='al').reduce((a,g)=>a+g.valor,0);
+    const sEn = its.filter(g=>g.cat==='en').reduce((a,g)=>a+g.valor,0);
+    const sTot= sAl+sEn;
+    const sPrev = pTot/nSems;
+    const cl = statusClasse(sTot, sPrev);
+    semsHTML += `
+    <div class="config-row" style="flex-direction:column;align-items:flex-start;gap:10px;padding:14px 16px">
+      <div style="display:flex;width:100%;justify-content:space-between;align-items:center">
+        <span style="font-size:15px;font-weight:600">Semana ${s}</span>
+        ${pillHTML(sTot, sPrev)}
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;width:100%;gap:6px">
         <div>
-          <div style="color:var(--al);font-size:10px;margin-bottom:2px;">🍽️ Alim.</div>
-          <div style="font-weight:500">${formatBRL(gAl)}</div>
+          <div style="font-size:10px;color:var(--al);font-weight:600;margin-bottom:2px">🍽️ ALIM.</div>
+          <div style="font-size:14px;font-weight:600">${fmtBRL(sAl)}</div>
         </div>
         <div>
-          <div style="color:var(--en);font-size:10px;margin-bottom:2px;">🎭 Entret.</div>
-          <div style="font-weight:500">${formatBRL(gEn)}</div>
+          <div style="font-size:10px;color:var(--en);font-weight:600;margin-bottom:2px">🎭 ENT.</div>
+          <div style="font-size:14px;font-weight:600">${fmtBRL(sEn)}</div>
         </div>
         <div>
-          <div style="color:var(--muted);font-size:10px;margin-bottom:2px;">Total</div>
-          <div style="font-weight:600;color:${classeBalanco(gTot,pSem)==='ok'?'var(--ok)':classeBalanco(gTot,pSem)==='nok'?'var(--nok)':'var(--warn)'}">${formatBRL(gTot)}</div>
+          <div style="font-size:10px;color:var(--label2);font-weight:600;margin-bottom:2px">TOTAL</div>
+          <div style="font-size:14px;font-weight:700;color:var(--${cl==='ok'?'green':cl==='warn'?'yellow':'red'})">${fmtBRL(sTot)}</div>
         </div>
       </div>
     </div>`;
   }
 
   document.getElementById('monthContent').innerHTML = `
-    <div class="month-section">
-      <div class="month-title"><span>${mesNome}</span> ${ano}</div>
+    <div class="section-label">${MESES[mes]} ${ano}</div>
 
-      <div class="summary-grid" style="margin-bottom:16px">
-        <div class="summary-card card-al">
-          <div class="card-label"><span class="card-emoji">🍽️</span>Alimentação</div>
-          <div class="card-value ${classeBalanco(gastoAl,prevAl)}">${formatBRL(gastoAl)}</div>
-          <div class="card-sub">Previsto: ${formatBRL(prevAl)}</div>
-          <div class="card-bar"><div class="card-bar-fill" style="width:${Math.min(gastoAl/prevAl*100,100)}%"></div></div>
-        </div>
-        <div class="summary-card card-en">
-          <div class="card-label"><span class="card-emoji">🎭</span>Entretenimento</div>
-          <div class="card-value ${classeBalanco(gastoEn,prevEn)}">${formatBRL(gastoEn)}</div>
-          <div class="card-sub">Previsto: ${formatBRL(prevEn)}</div>
-          <div class="card-bar"><div class="card-bar-fill" style="width:${Math.min(gastoEn/prevEn*100,100)}%"></div></div>
-        </div>
-        <div class="summary-card full">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div>
-              <div class="card-label">Total do mês</div>
-              <div class="card-value ${classeBalanco(gastoTot,prevTot)}">${formatBRL(gastoTot)}</div>
-              <div class="card-sub">Previsto: ${formatBRL(prevTot)}</div>
-            </div>
-            ${badgeStatus(gastoTot, prevTot)}
-          </div>
-          <div class="card-bar"><div class="card-bar-fill" style="background:var(--text);width:${Math.min(gastoTot/prevTot*100,100)}%"></div></div>
+    <div class="ring-card">
+      <div class="ring-wrap">
+        <svg class="ring-svg" width="80" height="80" viewBox="0 0 80 80">
+          <circle class="ring-track" cx="40" cy="40" r="33" stroke-width="11"/>
+          <circle class="ring-fill" cx="40" cy="40" r="33" stroke="var(--al)"
+            stroke-width="11" stroke-dasharray="207.3"
+            stroke-dashoffset="${207.3 - Math.min(gAl/pAl,1)*207.3}" stroke-linecap="round"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-pct" style="color:var(--al);font-size:14px">${Math.round(pAl?gAl/pAl*100:0)}%</div>
         </div>
       </div>
+      <div class="ring-info">
+        <div class="ring-title">🍽️ Alimentação</div>
+        <div class="ring-value" style="color:var(--al);font-size:26px">${fmtBRL(gAl)}</div>
+        <div class="ring-sub">Previsto: ${fmtBRL(pAl)}</div>
+        <div class="ring-bal">${balText(gAl,pAl)}</div>
+      </div>
+    </div>
 
-      <div class="section-title" style="margin-bottom:12px;font-family:'DM Serif Display',serif;font-size:17px;">Por semana</div>
-      ${semanasHTML}
-    </div>`;
+    <div class="ring-card">
+      <div class="ring-wrap">
+        <svg class="ring-svg" width="80" height="80" viewBox="0 0 80 80">
+          <circle class="ring-track" cx="40" cy="40" r="33" stroke-width="11"/>
+          <circle class="ring-fill" cx="40" cy="40" r="33" stroke="var(--en)"
+            stroke-width="11" stroke-dasharray="207.3"
+            stroke-dashoffset="${207.3 - Math.min(gEn/pEn,1)*207.3}" stroke-linecap="round"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-pct" style="color:var(--en);font-size:14px">${Math.round(pEn?gEn/pEn*100:0)}%</div>
+        </div>
+      </div>
+      <div class="ring-info">
+        <div class="ring-title">🎭 Entretenimento</div>
+        <div class="ring-value" style="color:var(--en);font-size:26px">${fmtBRL(gEn)}</div>
+        <div class="ring-sub">Previsto: ${fmtBRL(pEn)}</div>
+        <div class="ring-bal">${balText(gEn,pEn)}</div>
+      </div>
+    </div>
+
+    <div class="total-card">
+      <div class="total-card-header">
+        <div class="total-card-title">Total do mês</div>
+        ${pillHTML(gTot,pTot)}
+      </div>
+      <div class="total-big">${fmtBRL(gTot)}</div>
+      <div class="total-sub">Previsto: ${fmtBRL(pTot)}</div>
+      <div class="prog-bar">
+        <div class="prog-fill" style="width:${Math.min(gTot/pTot*100,100)}%;background:var(--${statusClasse(gTot,pTot)==='ok'?'green':statusClasse(gTot,pTot)==='warn'?'yellow':'red'})"></div>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:24px">Por semana</div>
+    <div class="config-group">${semsHTML}</div>
+  `;
 }
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 // RENDER: CONFIG
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 function renderConfig() {
-  document.getElementById('cfgUrl').value      = CONFIG.url;
-  document.getElementById('cfgBudgetAl').value = CONFIG.budgetAl;
-  document.getElementById('cfgBudgetEn').value = CONFIG.budgetEn;
+  document.getElementById('cfgUrl').value      = CFG.url;
+  document.getElementById('cfgBudgetAl').value = CFG.budgetAl;
+  document.getElementById('cfgBudgetEn').value = CFG.budgetEn;
 }
-
 function salvarConfig() {
-  CONFIG.url = document.getElementById('cfgUrl').value.trim();
-  localStorage.setItem('cfg_url', CONFIG.url);
-  mostrarToast('✅ URL salva!');
+  CFG.url = document.getElementById('cfgUrl').value.trim();
+  toast('✅ URL salva!');
 }
-
 function salvarBudget() {
-  CONFIG.budgetAl = parseFloat(document.getElementById('cfgBudgetAl').value) || 1800;
-  CONFIG.budgetEn = parseFloat(document.getElementById('cfgBudgetEn').value) || 1800;
-  localStorage.setItem('cfg_budgetAl', CONFIG.budgetAl);
-  localStorage.setItem('cfg_budgetEn', CONFIG.budgetEn);
-  mostrarToast('✅ Budget salvo!');
+  CFG.budgetAl = parseFloat(document.getElementById('cfgBudgetAl').value)||1800;
+  CFG.budgetEn = parseFloat(document.getElementById('cfgBudgetEn').value)||1800;
+  toast('✅ Budget salvo!');
+  renderSemana();
 }
 
-// ════════════════════════════════════════════════
-// FORMULÁRIO
-// ════════════════════════════════════════════════
-let categoriaAtual = 'al';
-let pagamentoAtual = 'deb';
-
-function abrirFormulario(id = null) {
-  editandoId = id;
-  document.getElementById('drawerTitle').textContent = id ? 'Editar gasto' : 'Novo gasto';
+// ══════════════════════════════════════════════
+// FORM
+// ══════════════════════════════════════════════
+function abrirForm(id) {
+  editId = id;
+  document.getElementById('sheetTitle').textContent = id ? 'Editar gasto' : 'Novo gasto';
   document.getElementById('btnExcluir').style.display = id ? 'block' : 'none';
 
   if (id) {
-    const g = gastos.find(x => x.id === id);
-    document.getElementById('fTitulo').value = g.titulo;
-    document.getElementById('fValor').value  = g.valor;
-    document.getElementById('fData').value   = toDateInput(new Date(g.timestamp));
-    selecionarCategoria(g.categoria, true);
-    selecionarPag(g.pagamento, true);
+    const g = gastos.find(x=>x.id===id);
+    if (g) {
+      document.getElementById('fTitulo').value = g.titulo;
+      document.getElementById('fValor').value  = g.valor;
+      document.getElementById('fData').value   = toInput(new Date(g.ts));
+      setCategoria(g.cat, true);
+      setPag(g.pag, true);
+    }
   } else {
     document.getElementById('fTitulo').value = '';
     document.getElementById('fValor').value  = '';
-    document.getElementById('fData').value   = toDateInput(hoje());
-    selecionarCategoria('al', true);
-    selecionarPag('deb', true);
+    document.getElementById('fData').value   = toInput(hoje());
+    setCategoria('al', true);
+    setPag('deb', true);
   }
   document.getElementById('overlayForm').classList.add('open');
-  setTimeout(() => document.getElementById('fTitulo').focus(), 300);
+  setTimeout(()=>document.getElementById('fTitulo').focus(), 350);
 }
 
-function fecharFormulario(e) {
-  if (!e || e.target === document.getElementById('overlayForm')) {
+function fecharForm(e) {
+  if (!e || e.target===document.getElementById('overlayForm'))
     document.getElementById('overlayForm').classList.remove('open');
-  }
 }
 
-function editarGasto(id) { abrirFormulario(id); }
-
-function selecionarCategoria(cat, silencioso = false) {
-  categoriaAtual = cat;
-  document.getElementById('btnAl').className = 'seg-btn' + (cat === 'al' ? ' active-al' : '');
-  document.getElementById('btnEn').className = 'seg-btn' + (cat === 'en' ? ' active-en' : '');
+function setCategoria(cat, silent=false) {
+  catAtual = cat;
+  document.getElementById('sAl').className = 'seg-opt' + (cat==='al'?' active-al':'');
+  document.getElementById('sEn').className = 'seg-opt' + (cat==='en'?' active-en':'');
 }
 
-function selecionarPag(pag, silencioso = false) {
-  pagamentoAtual = pag;
-  document.getElementById('btnDeb').className  = 'seg-btn' + (pag === 'deb'  ? ' active-deb'  : '');
-  document.getElementById('btnCred').className = 'seg-btn' + (pag === 'cred' ? ' active-cred' : '');
+function setPag(pag, silent=false) {
+  pagAtual = pag;
+  document.getElementById('sDeb').className  = 'seg-opt' + (pag==='deb'?' active':'');
+  document.getElementById('sCred').className = 'seg-opt' + (pag==='cred'?' active':'');
 }
 
 async function salvarGasto() {
-  const titulo    = document.getElementById('fTitulo').value.trim();
-  const valorStr  = document.getElementById('fValor').value;
-  const dataStr   = document.getElementById('fData').value;
+  const titulo = document.getElementById('fTitulo').value.trim();
+  const valor  = parseFloat(document.getElementById('fValor').value);
+  const dataS  = document.getElementById('fData').value;
 
-  if (!titulo || !valorStr || !dataStr) {
-    mostrarToast('⚠️ Preencha todos os campos'); return;
-  }
+  if (!titulo || isNaN(valor) || !dataS) { toast('⚠️ Preencha todos os campos'); return; }
 
-  const valor     = parseFloat(valorStr);
-  const dataObj   = parseDateInput(dataStr);
-  const timestamp = dataObj.getTime();
-
+  const ts  = fromInput(dataS).getTime();
   const btn = document.getElementById('btnSalvar');
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div>';
 
   const payload = {
-    id:         editandoId || Date.now().toString(),
-    titulo,
-    valor,
-    categoria:  categoriaAtual,
-    pagamento:  pagamentoAtual,
-    timestamp,
-    dataStr:    formatarData(dataObj),
+    id:     editId || Date.now().toString(),
+    titulo, valor, cat: catAtual, pag: pagAtual, ts,
+    dataStr: fmtData(fromInput(dataS)),
   };
 
-  if (editandoId) {
-    const idx = gastos.findIndex(g => g.id === editandoId);
-    if (idx !== -1) gastos[idx] = payload;
+  if (editId) {
+    const i = gastos.findIndex(g=>g.id===editId);
+    if (i !== -1) gastos[i] = payload; else gastos.push(payload);
   } else {
     gastos.push(payload);
   }
-  localStorage.setItem('gastos_cache', JSON.stringify(gastos));
+  localStorage.setItem('gastos_v2', JSON.stringify(gastos));
 
-  // Enviar ao Sheets
-  if (CONFIG.url) {
+  if (CFG.url) {
     try {
-      await enviarAoSheets(payload, editandoId ? 'editar' : 'adicionar');
-      mostrarToast('✅ Salvo no Google Sheets!');
-    } catch(e) {
-      mostrarToast('⚠️ Salvo localmente (Sheets offline)');
-    }
+      await fetch(CFG.url, { method:'POST', body: JSON.stringify({ acao: editId?'editar':'adicionar', ...payload }) });
+      toast('✅ Salvo no Google Sheets!');
+    } catch { toast('💾 Salvo localmente (Sheets offline)'); }
   } else {
-    mostrarToast('💾 Salvo localmente');
+    toast('💾 Salvo localmente');
   }
 
-  fecharFormulario();
+  fecharForm();
   btn.disabled = false;
-  btn.textContent = 'Salvar gasto';
+  btn.textContent = 'Salvar';
   renderSemana();
 }
 
 async function excluirGasto() {
-  if (!editandoId) return;
-  if (!confirm('Excluir esta despesa?')) return;
-
-  gastos = gastos.filter(g => g.id !== editandoId);
-  localStorage.setItem('gastos_cache', JSON.stringify(gastos));
-
-  if (CONFIG.url) {
-    try { await enviarAoSheets({ id: editandoId }, 'excluir'); } catch(e) {}
+  if (!editId || !confirm('Excluir esta despesa?')) return;
+  gastos = gastos.filter(g=>g.id!==editId);
+  localStorage.setItem('gastos_v2', JSON.stringify(gastos));
+  if (CFG.url) {
+    try { await fetch(CFG.url, { method:'POST', body: JSON.stringify({ acao:'excluir', id:editId }) }); } catch {}
   }
-
-  mostrarToast('🗑️ Despesa excluída');
-  fecharFormulario();
+  toast('🗑️ Despesa excluída');
+  fecharForm();
   renderSemana();
 }
 
-// ════════════════════════════════════════════════
-// API GOOGLE SHEETS
-// ════════════════════════════════════════════════
-async function enviarAoSheets(payload, acao) {
-  const res = await fetch(CONFIG.url, {
-    method: 'POST',
-    body: JSON.stringify({ acao, ...payload }),
-  });
-  if (!res.ok) throw new Error('Sheets error');
-  return res.json();
-}
-
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 // TOAST
-// ════════════════════════════════════════════════
-let toastTimer;
-function mostrarToast(msg) {
+// ══════════════════════════════════════════════
+let toastT;
+function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>el.classList.remove('show'), 2500);
 }
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 // INIT
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 renderSemana();
 </script>
 </body>
